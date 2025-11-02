@@ -1,0 +1,2 @@
+# CollaborativeEditor-frontend
+Frontend application
