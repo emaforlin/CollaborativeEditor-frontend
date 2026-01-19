@@ -53,6 +53,7 @@ export function useWebSocket({
       const ws = new WebSocket(url);
       // Ensure consistent message payload type across browsers
       ws.binaryType = "blob";
+      wsRef.current = ws;
 
       ws.onopen = (event) => {
         console.log("WebSocket connected");
@@ -61,7 +62,6 @@ export function useWebSocket({
       };
 
       ws.onmessage = (event) => {
-        console.log("WebSocket message received");
         setLastMessage(event);
         onMessageRef.current?.(event);
       };
@@ -69,7 +69,6 @@ export function useWebSocket({
       ws.onclose = (event) => {
         console.log("WebSocket disconnected");
         setIsConnected(false);
-        wsRef.current = null;
         onCloseRef.current?.(event);
 
         // Attempt to reconnect if enabled
@@ -86,7 +85,6 @@ export function useWebSocket({
         onErrorRef.current?.(event);
       };
 
-      wsRef.current = ws;
     } catch (error) {
       console.error("Failed to create WebSocket:", error);
     }
@@ -107,10 +105,19 @@ export function useWebSocket({
   }, [url]);
 
   const sendMessage = (
-    data: string | ArrayBufferLike | Blob | ArrayBufferView
+    data: string | ArrayBuffer,
+    messageType: string
   ) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(data);
+      const message = JSON.stringify(
+        {
+          type: messageType,
+          content: data,
+          timestamp: Date.now().valueOf()
+        }
+      )
+      console.log("Sending message:", message);
+      wsRef.current.send(message)
     } else {
       console.warn("WebSocket is not connected");
     }
