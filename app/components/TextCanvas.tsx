@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router";
-import { useWebSocket } from "~/hooks/useWebSocket";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import * as Y from "yjs";
-import { useAuthContext } from "~/context/AuthContext";
+import { useAuthContext } from "@/context/AuthContext";
 
 // Sync protocol message types
 const MSG_TYPE_SYNC_REQUEST = "sync_request";
