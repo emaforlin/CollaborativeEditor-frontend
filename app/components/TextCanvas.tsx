@@ -303,17 +303,17 @@ export default function TextCanvas() {
           {status.text}
         </div>
       </div>
-
       <textarea
         name="canvas"
         id="canvas"
-        className={`w-full h-full bg-gray-800 p-2 
+        className={`w-full h-full bg-gray-800 p-2 text-white
           ${!isConnected || !isSynced ? " text-gray-500" : ""}
           focus:outline-none resize-none`}
         onChange={handleContentChange}
         disabled={!isConnected || !isSynced}
         value={content}
       />
+
     </div>
   );
 }

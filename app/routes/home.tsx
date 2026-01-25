@@ -1,5 +1,7 @@
 import TextCanvas from "@/components/TextCanvas";
 import type { Route } from "./+types/home";
+import { useAuthContext } from "@/context/AuthContext";
+import { Navigate } from "react-router";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -9,9 +11,11 @@ export function meta({ }: Route.MetaArgs) {
 }
 
 export default function Home() {
+  const { isAuthenticated } = useAuthContext();
+
   return (
     <div className="flex text-center items-center justify-center h-screen my-20">
-      <TextCanvas />
+      {isAuthenticated ? <TextCanvas /> : <Navigate to="/login" />}
     </div>
   );
 }

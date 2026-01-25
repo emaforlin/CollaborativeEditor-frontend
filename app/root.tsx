@@ -11,6 +11,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 
 import { AuthProvider } from "@/context/AuthContext";
+import NavBar from "@/components/NavBar";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -34,10 +35,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
-        {children}
+      <body className="bg-gray-50">
+        <AuthProvider>
+
+          <NavBar />
+          {children}
+        </AuthProvider>
         <ScrollRestoration />
         <Scripts />
+
       </body>
     </html>
   );
@@ -45,9 +51,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Outlet />
-    </AuthProvider>
+    <Outlet />
   );
 }
 
