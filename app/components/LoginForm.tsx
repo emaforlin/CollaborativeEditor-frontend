@@ -7,6 +7,7 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { useAppStage, Stage } from "@/hooks/useAppStage";
 
 
 const loginFormSchema = z.object({
@@ -17,11 +18,13 @@ const loginFormSchema = z.object({
 export type LoginData = z.infer<typeof loginFormSchema>;
 
 interface LoginFormProps {
-    onSubmit: (data: LoginData) => void;
+    onSubmit: (data: LoginData) => Promise<void> | void;
 }
 
 export function LoginForm(loginFormProps: LoginFormProps) {
+    const stage = useAppStage();
     const [passwordVisible, setPasswordVisible] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const form = useForm<LoginData>({
         resolver: zodResolver(loginFormSchema),
         defaultValues: {
@@ -31,10 +34,14 @@ export function LoginForm(loginFormProps: LoginFormProps) {
         mode: "onTouched",
     })
 
-    const onSubmit = (data: LoginData) => {
-        loginFormProps.onSubmit(data);
+    const onSubmit = async (data: LoginData) => {
+        setErrorMessage(null);
+        try {
+            await loginFormProps.onSubmit(data);
+        } catch (error: any) {
+            setErrorMessage(stage === Stage.PRODUCTION ? "Login failed" : error instanceof Error ? `${stage} mode - literal error: ${error.message}` : "An unexpected error occurred");
+        }
     }
-
     return <>
         <Card className="w-[400px]">
             <CardHeader>
@@ -70,6 +77,7 @@ export function LoginForm(loginFormProps: LoginFormProps) {
                                 </Field>
                             )}
                         />
+                        {errorMessage && <FieldError className="text-center" errors={[{ message: errorMessage }]} />}
                         <div className="flex justify-center pt-10">
                             <Button type="submit" className="w-full">Login</Button>
                         </div>

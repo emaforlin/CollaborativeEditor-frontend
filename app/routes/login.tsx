@@ -2,6 +2,7 @@ import { LoginForm } from "@/components/LoginForm";
 import { useAuthContext } from "@/context/AuthContext";
 import type { LoginData } from "@/components/LoginForm";
 import { Navigate } from "react-router";
+import { useState } from "react";
 
 export default function LoginPage() {
     const { login, isAuthenticated } = useAuthContext();
@@ -14,6 +15,7 @@ export default function LoginPage() {
             });
         } catch (error) {
             console.error("Login failed:", error);
+            throw error;
         }
     };
 
