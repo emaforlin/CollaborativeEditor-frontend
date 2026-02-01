@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import * as Y from "yjs";
 import { useAuthContext } from "@/context/AuthContext";
+import { logger } from "@/lib/logger";
 
 // Sync protocol message types
 const MSG_TYPE_SYNC_REQUEST = "sync_request";
@@ -79,10 +80,10 @@ export default function TextCanvas() {
 
   // Handle sync_request: existing client responds with their Yjs state
   const handleSyncRequest = useCallback((payload: SyncRequestPayload) => {
-    console.log("📤 Received sync_request from new collaborator:", payload.requester_id);
+    logger.log("📤 Received sync_request from new collaborator:", payload.requester_id);
 
     if (!ydoc) {
-      console.warn("Cannot respond to sync_request: Yjs doc not initialized");
+      logger.warn("Cannot respond to sync_request: Yjs doc not initialized");
       return;
     }
 
@@ -90,7 +91,7 @@ export default function TextCanvas() {
     const state = Y.encodeStateAsUpdate(ydoc);
     const stateBase64 = encodeYjsState(state);
 
-    console.log("📦 Sending sync_response with state size:", state.byteLength);
+    logger.log("📦 Sending sync_response with state size:", state.byteLength);
 
     // Send sync_response with our state
     const response = {
@@ -104,10 +105,10 @@ export default function TextCanvas() {
 
   // Handle sync_init: new client receives initial state
   const handleSyncInit = useCallback((payload: SyncInitPayload) => {
-    console.log("📥 Received sync_init, source:", payload.source);
+    logger.log("📥 Received sync_init, source:", payload.source);
 
     if (!ydoc) {
-      console.warn("Cannot apply sync_init: Yjs doc not initialized");
+      logger.warn("Cannot apply sync_init: Yjs doc not initialized");
       return;
     }
 
@@ -116,15 +117,15 @@ export default function TextCanvas() {
       try {
         const state = decodeYjsState(payload.state);
         Y.applyUpdate(ydoc, state, 'remote');
-        console.log("✅ Applied peer sync state, size:", state.byteLength);
+        logger.log("✅ Applied peer sync state, size:", state.byteLength);
       } catch (error) {
-        console.error("Failed to apply peer sync state:", error);
+        logger.error("Failed to apply peer sync state:", error);
       }
     } else if (payload.source === "db") {
       // First collaborator - should fetch from documents service
       // For now, the document is empty (initial state)
       // TODO: Fetch document content from API if needed
-      console.log("📄 First collaborator - using empty/local state");
+      logger.log("📄 First collaborator - using empty/local state");
     }
 
     // Mark as synced
@@ -132,7 +133,7 @@ export default function TextCanvas() {
 
     // Send sync_ack to confirm sync is complete
     sendMessageRef.current?.("", MSG_TYPE_SYNC_ACK);
-    console.log("✅ Sent sync_ack");
+    logger.log("✅ Sent sync_ack");
   }, [ydoc]);
 
   // Handle Yjs updates from other clients
@@ -150,20 +151,20 @@ export default function TextCanvas() {
       }
 
       Y.applyUpdate(ydoc, update, 'remote');
-      console.log("✅ Applied remote Yjs update, size:", update.byteLength);
+      logger.log("✅ Applied remote Yjs update, size:", update.byteLength);
     } catch (error) {
-      console.error("Failed to apply Yjs update:", error);
+      logger.error("Failed to apply Yjs update:", error);
     }
   }, [ydoc]);
 
   const handleMessage = useCallback(
     (event: MessageEvent) => {
       const { data } = event;
-      console.log("Received message from Realtime Gateway", data);
+      logger.log("Received message from Realtime Gateway", data);
 
       // Handle Blob (binary) messages
       if (data instanceof Blob) {
-        console.log("Received Blob message, size:", data.size);
+        logger.log("Received Blob message, size:", data.size);
         // Convert Blob to ArrayBuffer for Yjs updates
         data.arrayBuffer().then((buffer) => {
           handleYjsUpdate(new Uint8Array(buffer));
@@ -177,7 +178,7 @@ export default function TextCanvas() {
           const parsedMessage = JSON.parse(data);
 
           if (parsedMessage === null) {
-            console.warn("Received null message from Realtime Gateway");
+            logger.warn("Received null message from Realtime Gateway");
             return;
           }
 
@@ -193,17 +194,17 @@ export default function TextCanvas() {
             case MSG_TYPE_YJS_UPDATE:
               // Yjs update from another client (via NATS broadcast)
               if (parsedMessage.content) {
-                console.log("parsed message", parsedMessage)
+                logger.log("parsed message", parsedMessage)
                 handleYjsUpdate(parsedMessage.content);
               }
               break;
 
             default:
-              console.log("Parsed Message:", parsedMessage);
-              console.warn("Unsupported message type received:", parsedMessage.type);
+              logger.log("Parsed Message:", parsedMessage);
+              logger.warn("Unsupported message type received:", parsedMessage.type);
           }
         } catch (error) {
-          console.error("Error parsing JSON message:", error);
+          logger.error("Error parsing JSON message:", error);
         }
       }
     },
@@ -214,12 +215,12 @@ export default function TextCanvas() {
     url: WS_URL,
     onMessage: handleMessage,
     onOpen: () => {
-      console.log("Connected to collaborative editor");
+      logger.log("Connected to collaborative editor");
       // The server will automatically send sync_init or request sync from peers
       // No need to manually send sync_request from client anymore
     },
     onClose: () => {
-      console.log("Disconnected from collaborative editor");
+      logger.log("Disconnected from collaborative editor");
       setIsSynced(false);
     },
     reconnect: true,
@@ -238,7 +239,7 @@ export default function TextCanvas() {
     const handleUpdate = (update: Uint8Array, origin: any) => {
       // Only send updates that originated locally (not from remote) and after we're synced
       if (origin !== "remote" && sendMessageRef.current && isSynced) {
-        console.log("Sending Yjs update, size:", update.byteLength);
+        logger.log("Sending Yjs update, size:", update.byteLength);
         // Encode as base64 and send
         const stateBase64 = encodeYjsState(update);
         sendMessageRef.current(stateBase64, MSG_TYPE_YJS_UPDATE);

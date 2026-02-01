@@ -1,4 +1,5 @@
 import { getEnv } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 export enum Stage {
     BENCH = "bench",
@@ -10,6 +11,6 @@ export enum Stage {
 export function useAppStage() {
     let stageString = getEnv<string>("VITE_APP_STAGE");
     let stage = stageString ? (stageString.toLowerCase() as Stage) : Stage.TESTING;
-    console.info("Current stage: ", stage);
+    logger.info("Current stage: ", stage);
     return stage;
 }

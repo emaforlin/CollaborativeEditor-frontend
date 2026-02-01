@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { logger } from "@/lib/logger";
 
 interface UseWebSocketOptions {
   url: string;
@@ -56,7 +57,7 @@ export function useWebSocket({
       wsRef.current = ws;
 
       ws.onopen = (event) => {
-        console.log("WebSocket connected");
+        logger.log("WebSocket connected");
         setIsConnected(true);
         onOpenRef.current?.(event);
       };
@@ -67,26 +68,26 @@ export function useWebSocket({
       };
 
       ws.onclose = (event) => {
-        console.log("WebSocket disconnected");
+        logger.log("WebSocket disconnected");
         setIsConnected(false);
         onCloseRef.current?.(event);
 
         // Attempt to reconnect if enabled
         if (shouldReconnectRef.current) {
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log("Attempting to reconnect...");
+            logger.log("Attempting to reconnect...");
             connect();
           }, reconnectInterval);
         }
       };
 
       ws.onerror = (event) => {
-        console.error("WebSocket error:", event);
+        logger.error("WebSocket error:", event);
         onErrorRef.current?.(event);
       };
 
     } catch (error) {
-      console.error("Failed to create WebSocket:", error);
+      logger.error("Failed to create WebSocket:", error);
     }
   };
 
@@ -116,10 +117,10 @@ export function useWebSocket({
           timestamp: Date.now().valueOf()
         }
       )
-      console.log("Sending message:", message);
+      logger.log("Sending message:", message);
       wsRef.current.send(message)
     } else {
-      console.warn("WebSocket is not connected");
+      logger.warn("WebSocket is not connected");
     }
   };
 
