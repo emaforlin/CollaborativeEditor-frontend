@@ -26,7 +26,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const JWT_SECRET = new TextEncoder().encode(getEnv("VITE_JWT_SECRET", "your-super-secret-jwt-key-change-this-in-production"));
+const JWT_SECRET = new TextEncoder().encode(getEnv("VITE_JWT_SECRET"));
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<JWTPayload | null>(null);
