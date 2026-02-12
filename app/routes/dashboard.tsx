@@ -5,16 +5,20 @@ import DocumentList from "@/components/DocumentList";
 import { DocumentForm, type CreateDocumentFormData } from "@/components/NewDocumentForm";
 import { Modal } from "@/components/ui/modal";
 import { useState } from "react";
+import { useDocumentContext } from "@/context/DocumentContext";
+import { Plus } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 export function meta({ }: Route.MetaArgs) {
     return [
-        { title: "New React Router App" },
-        { name: "description", content: "Welcome to React Router!" },
+        { title: "Dashboard - Collaborative Editor" },
+        { name: "description", content: "Manage your collaborative documents" },
     ];
 }
 
 export default function Dashboard() {
     const { user } = useAuthContext();
+    const { createDocument } = useDocumentContext();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleCreateDocument = () => {
@@ -26,10 +30,13 @@ export default function Dashboard() {
     };
 
     const handleSubmitDocument = async (data: CreateDocumentFormData) => {
-        // TODO: Implementar la lógica para crear un nuevo documento
-        console.log("Creating new document with data:", data);
-        // Cerrar el modal después de crear el documento
-        setIsModalOpen(false);
+        try {
+            const newDocument = await createDocument(data.title);
+            logger.log("Document created successfully:", newDocument);
+            setIsModalOpen(false);
+        } catch (error) {
+            logger.error("Failed to create document:", error);
+        }
     };
 
     return (
@@ -47,9 +54,7 @@ export default function Dashboard() {
                                 onClick={handleCreateDocument}
                                 className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                                </svg>
+                                <Plus />
                                 New Document
                             </button>
                         </div>
