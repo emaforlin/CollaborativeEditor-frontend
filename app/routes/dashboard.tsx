@@ -8,6 +8,8 @@ import { useState } from "react";
 import { useDocumentContext } from "@/context/DocumentContext";
 import { Plus } from "lucide-react";
 import { logger } from "@/lib/logger";
+import DocumentDetail from "@/components/DocumentDetail";
+import type { Document } from "@/context/DocumentContext";
 
 export function meta({ }: Route.MetaArgs) {
     return [
@@ -20,6 +22,7 @@ export default function Dashboard() {
     const { user } = useAuthContext();
     const { createDocument } = useDocumentContext();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
 
     const handleCreateDocument = () => {
         setIsModalOpen(true);
@@ -63,11 +66,18 @@ export default function Dashboard() {
 
                 {/* Content Section */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                        <DocumentList />
+                    <div className="flex flex-col md:flex-row gap-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6 w-full">
+                        <div className="w-full md:w-1/3">
+                            <DocumentList onSelectDocument={setSelectedDocument} />
+                        </div>
+                        <div className="w-full md:w-2/3">
+                            <DocumentDetail
+                                document={selectedDocument}
+                                onDelete={() => setSelectedDocument(null)}
+                            />
+                        </div>
                     </div>
                 </div>
-
                 {/* Modal for creating new document */}
                 <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Create a new document">
                     <DocumentForm onSubmit={handleSubmitDocument} />
